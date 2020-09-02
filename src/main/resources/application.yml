@@ -1,0 +1,11 @@
+system:
+  config: 
+    test: gsg
+    
+spring:
+  redis:
+    host:  # Redis服务器地址
+    password:  # Redis服务器连接密码（默认为空）
+    port: 6379
+    timeout: 3000
+    
