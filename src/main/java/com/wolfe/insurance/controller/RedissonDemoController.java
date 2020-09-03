@@ -1,5 +1,8 @@
 package com.wolfe.insurance.controller;
 
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,31 +13,27 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author wolfe
- * @classname RedisDemo2Controller
+ * @classname RedissonDemoController
  * @description 测试高并发扣库存，redis中存有订单总量key: stock=99,
- * 同时启动两个服务RedisDemo2Controller，端口为8080，8081（启动参数配置：-Dserver.port=8081），使用jmeter测试200并发，
+ * RedissonDemoController，端口为8080，8081（启动参数配置：-Dserver.port=8081），使用jmeter测试200并发，
  * 结果发现两个服务出现了扣除多次同一个库存的情况，产生了超卖的情况问题处理
  * @date 2020/9/2 3:44 下午
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/redisDemo2")
-public class RedisDemo2Controller {
+@RequestMapping("/redissonDemo")
+public class RedissonDemoController {
 	@Autowired
 	private StringRedisTemplate stringRedisTemplate;
+	@Autowired
+	private RedissonClient redissonClient;
 
 	@RequestMapping("/reduce_stack")
 	public String reduceOrder() {
 		String lockKey = "lockKey";
-		String clientId = UUID.randomUUID().toString();
-
+		RLock redissonClientLock = redissonClient.getLock(lockKey);
 		try {
-			//如果redis中不存在就创建，设置30s自动过期时间
-			Boolean aBoolean = stringRedisTemplate.opsForValue().setIfAbsent(lockKey, clientId, 30, TimeUnit.SECONDS);
-			if (!aBoolean) {
-				System.out.println("扣减操作已锁");
-				return "lock";
-			}
+			redissonClientLock.lock();
 			//获取redis存储
 			int stock = Integer.parseInt(stringRedisTemplate.opsForValue().get("stock"));
 			if (stock > 0) {
@@ -46,10 +45,7 @@ public class RedisDemo2Controller {
 			}
 			return "end";
 		} finally {
-			//判断当前获取redis锁了客户端id是否是当前线程持有的，如果是才能删除锁，避免其他线程删除不属于当前线程的锁
-			if (clientId.equals(stringRedisTemplate.opsForValue().get(lockKey))) {
-				stringRedisTemplate.delete(lockKey);
-			}
+			redissonClientLock.lock();
 		}
 	}
 }
