@@ -45,7 +45,7 @@ public class RedissonDemoController {
 			}
 			return "end";
 		} finally {
-			redissonClientLock.lock();
+			redissonClientLock.unlock();
 		}
 	}
 }

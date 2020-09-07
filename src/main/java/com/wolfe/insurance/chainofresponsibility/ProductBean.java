@@ -2,7 +2,9 @@ package com.wolfe.insurance.chainofresponsibility;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Wilbur
  * @classname ProductBean
@@ -12,15 +14,17 @@ import java.util.Date;
  */
 @Data
 public class ProductBean {
-    private String name;
-    private String product;
-    private Date startDate;
-    private String productStatus;
+	/**
+	 * 产品名称
+	 */
+	private String product;
+	/**
+	 * 险种责任，每款产品必须至少要有一种
+	 */
+	private List<String> duties = new ArrayList<>(0);
+	/**
+	 * 产品状态(0:新建，1：发布，2：上线，3：上架)
+	 */
+	private Integer productStatus;
 
-    public ProductBean(String name, String product, Date startDate, String productStatus) {
-        this.name = name;
-        this.product = product;
-        this.startDate = startDate;
-        this.productStatus = productStatus;
-    }
 }
